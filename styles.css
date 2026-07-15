@@ -952,7 +952,7 @@ td.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-
   .dashboard-kpi-rail { gap: 8px; }
   .dashboard-kpi-rail .stat { min-height: 210px; padding: 14px 12px; }
   .dashboard-kpi-rail .stat .stat-label { font-size: 9.5px; line-height: 1.25; padding-right: 25px; }
-  .dashboard-kpi-rail .stat .stat-value { font-size: clamp(23px, 6vw, 34px); margin-top: 12px; white-space: nowrap; }
+  .dashboard-kpi-rail .stat .stat-value { font-size: clamp(20px, 5.6vw, 34px); margin-top: 12px; white-space: nowrap; }
   .dashboard-kpi-rail .stat .stat-value small { font-size: 12px; }
   .dashboard-kpi-rail .stat .stat-foot { font-size: 9.8px; line-height: 1.35; }
   .dashboard-kpi-rail .stat .stat-ico { width: 24px; height: 24px; top: 10px; right: 10px; }
