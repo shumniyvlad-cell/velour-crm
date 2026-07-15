@@ -398,8 +398,8 @@
       html: `<div class="chart-box chart-draw" id="rev-chart">
         <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Выручка за 6 месяцев">
           <defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#C9566B" stop-opacity="0.2"/>
-            <stop offset="1" stop-color="#C9566B" stop-opacity="0"/>
+            <stop offset="0" stop-color="#C12F62" stop-opacity="0.24"/>
+            <stop offset="1" stop-color="#C12F62" stop-opacity="0"/>
           </linearGradient></defs>
           ${gridLines}
           <path d="${area}" fill="url(#ag)"/>
@@ -454,6 +454,43 @@
     return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
       <polygon points="${P},${H - P} ${pts} ${W - P},${H - P}" fill="${color}" opacity="0.1"/>
       <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" opacity="0.75"/>
+    </svg>`;
+  }
+
+  function heroSparkline(values, color) {
+    const W = 300, H = 64, P = 4;
+    const max = Math.max(...values), min = Math.min(...values);
+    const points = values.map((value, i) => ({
+      x: P + (W - 2 * P) * i / (values.length - 1),
+      y: H - P - (H - 2 * P) * ((value - min) / ((max - min) || 1)),
+    }));
+    let path = `M${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
+    points.slice(1).forEach((point, i) => {
+      const idx = i + 1;
+      const p0 = points[idx - 2] || points[idx - 1];
+      const p1 = points[idx - 1];
+      const p2 = point;
+      const p3 = points[idx + 1] || p2;
+      const cp1 = { x: p1.x + (p2.x - p0.x) / 6, y: p1.y + (p2.y - p0.y) / 6 };
+      const cp2 = { x: p2.x - (p3.x - p1.x) / 6, y: p2.y - (p3.y - p1.y) / 6 };
+      path += ` C${cp1.x.toFixed(1)} ${cp1.y.toFixed(1)} ${cp2.x.toFixed(1)} ${cp2.y.toFixed(1)} ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+    });
+    const area = `${path} L${W - P} ${H - P} L${P} ${H - P} Z`;
+    const markerIndexes = [...new Set([1, Math.floor(points.length / 2), points.length - 2])];
+    const markers = markerIndexes.map((i) => `<circle cx="${points[i].x.toFixed(1)}" cy="${points[i].y.toFixed(1)}" r="3.4" fill="#FFF9FC" stroke="${color}" stroke-width="2"/>`).join('');
+    return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+      <defs>
+        <linearGradient id="hero-spark-fill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="${color}" stop-opacity="0.22"/>
+          <stop offset="1" stop-color="${color}" stop-opacity="0"/>
+        </linearGradient>
+        <filter id="hero-spark-glow" x="-20%" y="-40%" width="140%" height="180%">
+          <feGaussianBlur stdDeviation="1.8" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <path d="${area}" fill="url(#hero-spark-fill)"/>
+      <path d="${path}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" filter="url(#hero-spark-glow)"/>
+      <g filter="url(#hero-spark-glow)">${markers}</g>
     </svg>`;
   }
 
@@ -522,13 +559,14 @@
     requestAnimationFrame(tick);
   }
 
-  function statCard(cls, label, valueHtml, footHtml, icon, sparkHtml) {
+  function statCard(cls, label, valueHtml, footHtml, icon, sparkHtml, extraHtml = '') {
     return `<div class="card stat ${cls} reveal">
       ${icon ? `<span class="stat-ico">${icon}</span>` : ''}
       <div class="stat-label">${label}</div>
       <div class="stat-value">${valueHtml}</div>
       <div class="stat-foot">${footHtml}</div>
       ${sparkHtml ? `<div class="spark">${sparkHtml}</div>` : ''}
+      ${extraHtml}
     </div>`;
   }
 
@@ -582,6 +620,20 @@
     const bdays = birthdaysSoon();
 
     const chart = areaChart(a.months);
+    const heroJourney = `<div class="hero-journey" aria-hidden="true">
+      <svg viewBox="0 0 260 150">
+        <path class="journey-link" d="M12 82 C58 82 82 75 130 75 C178 75 181 28 228 28"/>
+        <path class="journey-link" d="M130 75 C176 75 184 122 228 122"/>
+        <path class="journey-dash" d="M10 121 C72 113 104 105 154 107"/>
+        <circle class="journey-hub" cx="130" cy="75" r="28"/>
+        <text x="130" y="83" text-anchor="middle">₽</text>
+        <circle class="journey-node" cx="228" cy="28" r="16"/>
+        <circle class="journey-glyph" cx="228" cy="24" r="3.5"/>
+        <path class="journey-glyph" d="M221 35c1.2-4 3.7-6 7-6s5.8 2 7 6"/>
+        <circle class="journey-node" cx="228" cy="122" r="16"/>
+        <path class="journey-glyph" d="M222 122h12M228 116v12"/>
+      </svg>
+    </div>`;
 
     view().innerHTML = `
       <div class="page-head reveal">
@@ -595,15 +647,17 @@
         </div>
       </div>
 
-      <div class="grid-stats">
-        ${statCard('money', 'Выручка · 30 дней', `<span class="count-up" data-val="${a.revenue}"></span> <small>₽</small>`,
-    `${deltaChip(a.revenue, a.revenuePrev)} к прошлым 30 дням`, ICONS.wallet, sparkline(a.sparkRevenue, '#1B8A5A'))}
-        ${statCard('loss', 'Потери · 30 дней', `<span class="count-up" data-val="${a.lostSum}"></span> <small>₽</small>`,
-    `${a.lost.length} ${plural(a.lost.length, 'отмена или неявка', 'отмены и неявки', 'отмен и неявок')}`, ICONS.trendDown, sparkline(a.sparkLost, '#B23330'))}
-        ${statCard('', 'Повторные записи', `<span class="count-up" data-val="${a.repeat}" data-suffix="%"></span>`,
-    `${ppChip(a.repeat, a.repeatPrev, true)} доля визитов от вернувшихся`, ICONS.refresh, sparkline(a.sparkRepeat, '#B5485C'))}
-        ${statCard('', 'Не дошли на процедуру', `<span class="count-up" data-val="${a.noShowPct}" data-suffix="%" data-frac="1"></span>`,
-    `${ppChip(a.noShowPct, a.noShowPrev, false)} от всех записей за 30 дней`, ICONS.userX, sparkline(a.sparkNoShow, '#A8791A'))}
+      <div class="dashboard-kpis">
+        ${statCard('money revenue-hero', 'Выручка · 30 дней', `<span class="count-up" data-val="${a.revenue}"></span> <small>₽</small>`,
+    `${deltaChip(a.revenue, a.revenuePrev)} к прошлым 30 дням`, null, heroSparkline(a.sparkRevenue, '#FF7085'), heroJourney)}
+        <div class="dashboard-kpi-rail">
+          ${statCard('loss', 'Потери · 30 дней', `<span class="count-up" data-val="${a.lostSum}"></span> <small>₽</small>`,
+    `${a.lost.length} ${plural(a.lost.length, 'отмена или неявка', 'отмены и неявки', 'отмен и неявок')}`, ICONS.trendDown, sparkline(a.sparkLost, '#D83A6D'))}
+          ${statCard('', 'Повторные записи', `<span class="count-up" data-val="${a.repeat}" data-suffix="%"></span>`,
+    `${ppChip(a.repeat, a.repeatPrev, true)} доля визитов от вернувшихся`, ICONS.refresh, sparkline(a.sparkRepeat, '#C12F62'))}
+          ${statCard('', 'Не дошли на процедуру', `<span class="count-up" data-val="${a.noShowPct}" data-suffix="%" data-frac="1"></span>`,
+    `${ppChip(a.noShowPct, a.noShowPrev, false)} от всех записей за 30 дней`, ICONS.userX, sparkline(a.sparkNoShow, '#B98521'))}
+        </div>
       </div>
 
       <div class="grid-2">
@@ -1384,6 +1438,7 @@
 
   function render() {
     const r = currentRoute();
+    document.body.classList.toggle('route-dashboard', r === '#/dashboard');
     document.querySelectorAll('.nav-item[data-route]').forEach((n) => n.classList.toggle('active', n.getAttribute('href') === r));
     closeSheet();
     ROUTES[r]();
