@@ -151,6 +151,7 @@ tr:focus-visible { outline-offset: -2px; }
 @keyframes sheen { 0%, 62% { transform: translateX(-110%); } 82%, 100% { transform: translateX(110%); } }
 
 .profile { display: flex; align-items: center; gap: 10px; }
+.profile .ava { display: inline-flex; align-items: center; justify-content: center; line-height: 1; }
 .profile b { display: block; font-size: 13px; font-weight: 600; line-height: 1.2; }
 .profile span { display: block; font-size: 11px; color: var(--ink-3); }
 
@@ -403,28 +404,36 @@ td.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-
   transition: box-shadow var(--dur-fast) var(--ease-standard), transform var(--dur-fast) var(--ease-standard);
   position: relative;
   overflow: hidden;
+  cursor: pointer;
 }
 .cal-cell:hover { box-shadow: var(--shadow-float); transform: translateY(-1px); }
 .cal-cell.other { background: transparent; box-shadow: none; opacity: 0.45; }
 .cal-cell.other:hover { transform: none; }
 .cal-cell.today .cal-num { background: var(--accent); color: #fff; }
 .cal-cell.selected { box-shadow: 0 0 0 2px var(--accent), var(--shadow-card); }
+.cal-day-select { position: absolute; inset: 0; z-index: 0; width: 100%; border-radius: inherit; }
 .cal-num {
   font-family: var(--font-num);
   font-size: 12px; font-weight: 600;
   width: 22px; height: 22px; border-radius: 7px;
   display: inline-flex; align-items: center; justify-content: center;
+  position: relative; z-index: 1; pointer-events: none;
 }
 .cal-evt {
+  position: relative; z-index: 2;
+  display: block; width: 100%; text-align: left;
   font-size: 10.5px; font-weight: 550;
   background: var(--accent-wash); color: var(--accent-deep);
   border-radius: 6px; padding: 2px 6px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   max-width: 100%;
 }
+.cal-evt:hover { background: var(--accent-soft); color: var(--accent-deep); }
 .cal-evt .t { font-family: var(--font-num); font-weight: 650; margin-right: 4px; }
-.cal-more { font-size: 10px; color: var(--ink-3); font-weight: 600; }
-.cal-sum { margin-top: auto; font-size: 9.5px; color: var(--ink-3); font-family: var(--font-num); }
+.cal-more { position: relative; z-index: 1; pointer-events: none; font-size: 10px; color: var(--ink-3); font-weight: 600; }
+.cal-dots { position: relative; z-index: 1; pointer-events: none; }
+.cal-sum { position: relative; z-index: 1; pointer-events: none; margin-top: auto; font-size: 9.5px; color: var(--ink-3); font-family: var(--font-num); }
+#day-appointments { scroll-margin-top: 84px; }
 
 /* ==================== Слоты дня ==================== */
 .slot-row {
@@ -433,6 +442,8 @@ td.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-
   border-bottom: 1px solid var(--hairline);
 }
 .slot-row:last-child { border-bottom: 0; }
+.slot-row[data-act="open-appt"] { cursor: pointer; border-radius: 10px; transition: background var(--dur-fast) var(--ease-standard); }
+.slot-row[data-act="open-appt"]:hover { background: var(--wash); }
 .slot-time {
   font-family: var(--font-num);
   font-size: 15px; font-weight: 650;
@@ -608,6 +619,7 @@ td.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-
 }
 .modal-veil.open { opacity: 1; pointer-events: auto; }
 .modal {
+  position: relative;
   width: min(440px, 100%);
   background: var(--bg);
   border-radius: 18px;
@@ -619,6 +631,22 @@ td.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-
 }
 .modal-veil.open .modal { transform: translateY(0) scale(1); }
 .modal h3 { font-size: 18px; font-weight: 650; margin-bottom: 14px; letter-spacing: -0.01em; }
+.modal-close-x { position: absolute; top: 16px; right: 16px; }
+.appt-modal-head { display: flex; align-items: center; gap: 12px; padding-right: 38px; margin-bottom: 18px; }
+.appt-modal-person { flex: 1; min-width: 0; }
+.appt-modal-kicker { display: block; color: var(--accent); font-size: 10px; font-weight: 650; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 2px; }
+.appt-modal-head h3 { margin: 0; font-size: 19px; }
+.appt-modal-head p { color: var(--ink-3); font-size: 12px; margin-top: 2px; }
+.appt-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+.appt-detail { background: var(--canvas); border-radius: 12px; padding: 11px 13px; box-shadow: var(--shadow-card); min-width: 0; }
+.appt-detail.wide { grid-column: 1 / -1; }
+.appt-detail > span, .appt-reason > span { display: block; color: var(--ink-3); font-size: 10.5px; font-weight: 600; margin-bottom: 3px; }
+.appt-detail b { display: block; font-size: 13.5px; font-weight: 650; overflow-wrap: anywhere; }
+.appt-detail small { display: block; color: var(--ink-3); font-size: 11px; margin-top: 2px; }
+.appt-reason { margin-top: 10px; padding: 11px 13px; border-radius: 12px; background: var(--accent-wash); }
+.appt-reason p { color: var(--ink-2); font-size: 12.5px; line-height: 1.5; }
+.appt-modal-foot { flex-wrap: wrap; }
+.appt-modal-spacer { flex: 1; }
 .field { margin-bottom: 12px; }
 .field label { display: block; font-size: 11.5px; font-weight: 600; color: var(--ink-2); margin-bottom: 5px; letter-spacing: 0.03em; }
 .field input, .field select, .field textarea {

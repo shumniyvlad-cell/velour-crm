@@ -905,7 +905,7 @@
           <button class="btn btn-ghost btn-sm" data-act="appt-noshow" data-key="${k}">Не пришла</button>` : ''}
         ${(a.status === 'pending' || a.status === 'confirmed') ? `<button class="btn-icon" data-act="appt-cancel" data-key="${k}" title="Отменить">${ICONS.close}</button>` : ''}
       </div>`;
-    return `<div class="slot-row ${isPast ? 'past' : ''}">
+    return `<div class="slot-row ${isPast ? 'past' : ''}" data-act="open-appt" data-key="${esc(k)}" role="button" tabindex="0" aria-label="Открыть запись ${esc(c.name)}, ${a.time}">
       <span class="slot-time">${a.time}</span>
       <span class="ava ${avaClass(c.id)}" data-open-client="${c.id}" style="cursor:pointer;">${initials(c.name)}</span>
       <div class="slot-info"><b data-open-client="${c.id}" tabindex="0" role="button" style="cursor:pointer;">${esc(c.name)}</b>
@@ -982,21 +982,23 @@
       const active = list.filter((a) => a.status !== 'no_show');
       const sum = active.reduce((s, a) => s + a.price, 0);
       const shown = list.slice(0, 2);
-      return `<button class="cal-cell ${other ? 'other' : ''} ${dIso === D.todayIso ? 'today' : ''} ${dIso === selectedDay ? 'selected' : ''}" data-day="${dIso}">
+      const dayLabel = `${dateHuman(dIso)}, ${list.length ? `${list.length} ${plural(list.length, 'запись', 'записи', 'записей')}` : 'записей нет'}`;
+      return `<div class="cal-cell ${other ? 'other' : ''} ${dIso === D.todayIso ? 'today' : ''} ${dIso === selectedDay ? 'selected' : ''}">
+              <button type="button" class="cal-day-select" data-day="${dIso}" aria-label="Выбрать ${esc(dayLabel)}"></button>
               <span class="cal-num">${d.getDate()}</span>
               ${shown.map((a) => {
         const c = clientById(a.clientId);
-        return `<span class="cal-evt"><span class="t">${a.time}</span>${esc(firstName(c.name))}</span>`;
+        return `<button type="button" class="cal-evt" data-act="open-appt" data-key="${esc(apptKey(a))}" aria-label="Открыть запись: ${a.time}, ${esc(c.name)}"><span class="t">${a.time}</span>${esc(firstName(c.name))}</button>`;
       }).join('')}
               ${list.length > 2 ? `<span class="cal-more">+${list.length - 2} ещё</span>` : ''}
               <span class="cal-dots">${'<i></i>'.repeat(Math.min(list.length, 4))}</span>
               ${sum && !other ? `<span class="cal-sum">${nf.format(sum)} ₽</span>` : ''}
-            </button>`;
+            </div>`;
     }).join('')}
         </div>
       </div>
 
-      <div class="card reveal">
+      <div class="card reveal" id="day-appointments">
         <div class="card-head">
           <div>
             <div class="card-title">${cap(dateRel(selectedDay))} · ${WEEKDAYS[parseIso(selectedDay).getDay()]}</div>
@@ -1018,6 +1020,7 @@
       const d = parseIso(selectedDay);
       calShift = (d.getFullYear() - TODAY.getFullYear()) * 12 + d.getMonth() - TODAY.getMonth();
       renderCalendar();
+      requestAnimationFrame(() => document.getElementById('day-appointments')?.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'start' }));
     }));
     revealAll();
   }
@@ -1284,6 +1287,50 @@
     sync();
   }
 
+  function modalAppointment(key) {
+    const a = appointments().find((item) => apptKey(item) === key);
+    if (!a) { toast('Запись не найдена — обновите календарь'); return; }
+    const c = clientById(a.clientId);
+    if (!c) { toast('Клиентка для этой записи не найдена'); return; }
+    const services = a.serviceIds.map((id) => SVC[id] ? SVC[id].name : id).join(', ');
+    const master = MB[a.master];
+    const active = a.status === 'pending' || a.status === 'confirmed';
+    const canFinish = active && daysFromToday(a.date) <= 0;
+
+    selectedDay = a.date;
+    document.querySelectorAll('.cal-cell').forEach((cell) => {
+      cell.classList.toggle('selected', cell.querySelector('[data-day]')?.dataset.day === selectedDay);
+    });
+
+    openModal(`
+      <button class="btn-icon modal-close-x" type="button" data-act="modal-close" title="Закрыть">${ICONS.close}</button>
+      <div class="appt-modal-head">
+        <span class="ava lg ${avaClass(c.id)}">${initials(c.name)}</span>
+        <div class="appt-modal-person">
+          <span class="appt-modal-kicker">Запись</span>
+          <h3>${esc(c.name)}</h3>
+          <p>${esc(c.phone || 'Телефон не указан')}</p>
+        </div>
+        <span class="status ${a.status}">${STATUS_LABEL[a.status] || esc(a.status)}</span>
+      </div>
+      <div class="appt-detail-grid">
+        <div class="appt-detail"><span>Дата</span><b>${dateHuman(a.date)}</b><small>${WEEKDAYS[parseIso(a.date).getDay()]}</small></div>
+        <div class="appt-detail"><span>Время</span><b class="num">${a.time}</b><small>${master ? esc(master.short) : 'Мастер не указан'}</small></div>
+        <div class="appt-detail wide"><span>Услуга</span><b>${esc(services)}</b><small>${master ? esc(master.name) : 'Мастер не указан'}</small></div>
+        <div class="appt-detail"><span>Стоимость</span><b class="num">${money(a.price)}</b></div>
+        <div class="appt-detail"><span>Клиентка</span><b>${esc(c.phone || '—')}</b></div>
+      </div>
+      ${a.reason ? `<div class="appt-reason"><span>Комментарий</span><p>${esc(a.reason)}</p></div>` : ''}
+      <div class="modal-foot appt-modal-foot">
+        <button class="btn btn-ghost" type="button" data-open-client="${c.id}">Карточка клиентки</button>
+        <span class="appt-modal-spacer"></span>
+        ${a.status === 'pending' ? `<button class="btn btn-accent" type="button" data-act="appt-confirm" data-key="${esc(key)}">Подтвердить</button>` : ''}
+        ${canFinish ? `<button class="btn btn-accent" type="button" data-act="appt-done" data-key="${esc(key)}">Пришла</button>` : ''}
+        ${canFinish ? `<button class="btn btn-ghost" type="button" data-act="appt-noshow" data-key="${esc(key)}">Не пришла</button>` : ''}
+        ${active ? `<button class="btn btn-ghost" type="button" data-act="appt-cancel" data-key="${esc(key)}">Отменить</button>` : ''}
+      </div>`);
+  }
+
   function modalCancel(key) {
     openModal(`
       <h3>Отмена записи</h3>
@@ -1357,9 +1404,10 @@
     const t = e.target.closest('[data-act], [data-open-client]');
     if (!t) return;
 
-    if (t.dataset.openClient) { openSheet(t.dataset.openClient); return; }
+    if (t.dataset.openClient) { closeModal(); openSheet(t.dataset.openClient); return; }
 
     const act = t.dataset.act;
+    if (act === 'open-appt') { modalAppointment(t.dataset.key); return; }
     if (act === 'close-sheet') closeSheet();
     if (act === 'modal-close') closeModal();
     if (act === 'new-client') modalNewClient();
@@ -1423,17 +1471,18 @@
       render();
     }
 
-    if (act === 'appt-confirm') { saved.statusOverrides[t.dataset.key] = { status: 'confirmed' }; persist(); toast('Запись подтверждена'); render(); }
+    if (act === 'appt-confirm') { saved.statusOverrides[t.dataset.key] = { status: 'confirmed' }; persist(); closeModal(); toast('Запись подтверждена'); render(); }
     if (act === 'appt-done') {
       const a = appointments().find((x) => apptKey(x) === t.dataset.key);
       saved.statusOverrides[t.dataset.key] = { status: 'done' };
       persist();
       const c = clientById(a.clientId); const st = clientStats(c);
       const pts = Math.round(a.price * st.rate / 100);
+      closeModal();
       toast(`Визит завершён: +${money(a.price)} · +${nf.format(pts)} ${plural(pts, 'балл', 'балла', 'баллов')}`);
       render();
     }
-    if (act === 'appt-noshow') { saved.statusOverrides[t.dataset.key] = { status: 'no_show', reason: 'Не пришла без предупреждения' }; persist(); toast('Отмечена неявка — догон уже в очереди'); render(); }
+    if (act === 'appt-noshow') { saved.statusOverrides[t.dataset.key] = { status: 'no_show', reason: 'Не пришла без предупреждения' }; persist(); closeModal(); toast('Отмечена неявка — догон уже в очереди'); render(); }
     if (act === 'appt-cancel') modalCancel(t.dataset.key);
     if (act === 'confirm-cancel') {
       const reason = document.getElementById('f-reason').value;
@@ -1455,7 +1504,7 @@
   modalVeil().addEventListener('click', (e) => { if (e.target === modalVeil()) closeModal(); });
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') { closeSheet(); closeModal(); return; }
-    if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('[data-open-client]')) {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('[data-open-client], [data-act="open-appt"]')) {
       e.preventDefault();
       e.target.click();
     }
