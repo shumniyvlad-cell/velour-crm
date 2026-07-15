@@ -3,61 +3,93 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#F6F4F3">
   <title>ВЕЛЮР — CRM для бьюти-мастеров</title>
-  <meta name="description" content="ВЕЛЮР — CRM для бьюти-мастеров: база клиенток, догоны, аналитика денег и потерь, программа лояльности.">
+  <meta name="description" content="ВЕЛЮР — CRM для салонов и бьюти-мастеров: база клиенток, календарь записей, догоны, аналитика денег и потерь, лояльность.">
   <meta property="og:title" content="ВЕЛЮР — CRM для бьюти-мастеров">
-  <meta property="og:description" content="База клиенток, догоны, аналитика денег и потерь, лояльность — в одном тёплом интерфейсе.">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232B1D12'/%3E%3Ctext x='32' y='45' font-family='Georgia,serif' font-size='36' fill='%23FBF3EA' text-anchor='middle'%3EВ%3C/text%3E%3C/svg%3E">
+  <meta property="og:description" content="База клиенток, календарь, догоны, аналитика потерь и лояльность — в одном светлом интерфейсе.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23B5485C'/%3E%3Ctext x='32' y='45' font-family='Georgia,serif' font-size='36' fill='%23FFF6F4' text-anchor='middle'%3EВ%3C/text%3E%3C/svg%3E">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="shell">
-    <aside class="sidebar">
-      <div class="brand">
-        <a class="brand-word" href="#/dashboard">ВЕЛЮР</a>
+  <header class="topbar">
+    <div class="topbar-in">
+      <a class="brand" href="#/dashboard">
+        <span class="brand-word">ВЕЛЮР</span>
         <span class="brand-sub">beauty crm</span>
-      </div>
+      </a>
 
-      <div class="master">
-        <span class="ava a0">АМ</span>
-        <div><b>Алина Морозова</b><span>мастер маникюра и бровей</span></div>
-      </div>
-
-      <nav class="nav">
+      <nav class="nav" id="top-nav" aria-label="Основная навигация">
         <a class="nav-item" data-route href="#/dashboard">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg>
-          Дашборд
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg>
+          <span class="nav-label">Дашборд</span>
         </a>
         <a class="nav-item" data-route href="#/clients">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.8 19.5c.8-3 3.2-4.7 6.2-4.7s5.4 1.7 6.2 4.7"/><circle cx="17" cy="9.5" r="2.6"/><path d="M16.4 14.6c2.6.2 4.3 1.7 4.9 4.2"/></svg>
-          Клиентки
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.8 19.5c.8-3 3.2-4.7 6.2-4.7s5.4 1.7 6.2 4.7"/><circle cx="17" cy="9.5" r="2.6"/><path d="M16.4 14.6c2.6.2 4.3 1.7 4.9 4.2"/></svg>
+          <span class="nav-label">Клиентки</span>
         </a>
-        <a class="nav-item" data-route href="#/schedule">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 9.5h17M8 2.8v4M16 2.8v4"/></svg>
-          Записи
+        <a class="nav-item" data-route href="#/calendar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 9.5h17M8 2.8v4M16 2.8v4"/></svg>
+          <span class="nav-label">Записи</span>
         </a>
         <a class="nav-item" data-route href="#/retention">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 3.5 10 14M20.5 3.5l-6.8 17-3.7-6.5-6.5-3.7z"/></svg>
-          Догоны
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 3.5 10 14M20.5 3.5l-6.8 17-3.7-6.5-6.5-3.7z"/></svg>
+          <span class="nav-label">Догоны</span>
           <span class="nav-count" id="ret-count">0</span>
         </a>
-        <a class="nav-item" data-route href="#/loyalty">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3.5h10l4 5.5-9 11.5L3 9z"/><path d="M3 9h18M9.5 9 12 20.2 14.5 9"/></svg>
-          Лояльность
+        <a class="nav-item" data-route href="#/analytics">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3.5"/></svg>
+          <span class="nav-label">Аналитика</span>
         </a>
-        <a class="nav-item" href="docs.html">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15.5H6.5A2.5 2.5 0 0 0 4 21z"/><path d="M4 18.5A2.5 2.5 0 0 1 6.5 16H20"/></svg>
-          Документация
+        <a class="nav-item" data-route href="#/loyalty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3.5h10l4 5.5-9 11.5L3 9z"/><path d="M3 9h18M9.5 9 12 20.2 14.5 9"/></svg>
+          <span class="nav-label">Лояльность</span>
+        </a>
+        <a class="nav-item" href="docs.html" title="Документация">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15.5H6.5A2.5 2.5 0 0 0 4 21z"/><path d="M4 18.5A2.5 2.5 0 0 1 6.5 16H20"/></svg>
+          <span class="nav-label">Доки</span>
         </a>
       </nav>
 
-      <div class="sidebar-foot">
-        <span class="demo-chip"><span class="live-dot"></span>Демо-режим · данные условные</span>
+      <div class="profile">
+        <span class="ava a0">В</span>
+        <div>
+          <b>Салон «Велюр»</b>
+          <span>при отеле · администратор</span>
+        </div>
       </div>
-    </aside>
+    </div>
+  </header>
 
-    <main class="main" id="view"></main>
-  </div>
+  <main class="main" id="view"></main>
+
+  <nav class="bottom-nav" id="bottom-nav" aria-label="Основная навигация на мобильных">
+    <a class="nav-item" data-route href="#/dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg>
+      Дашборд
+    </a>
+    <a class="nav-item" data-route href="#/clients">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.8 19.5c.8-3 3.2-4.7 6.2-4.7s5.4 1.7 6.2 4.7"/><circle cx="17" cy="9.5" r="2.6"/><path d="M16.4 14.6c2.6.2 4.3 1.7 4.9 4.2"/></svg>
+      Клиентки
+    </a>
+    <a class="nav-item" data-route href="#/calendar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 9.5h17M8 2.8v4M16 2.8v4"/></svg>
+      Записи
+    </a>
+    <a class="nav-item" data-route href="#/retention">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 3.5 10 14M20.5 3.5l-6.8 17-3.7-6.5-6.5-3.7z"/></svg>
+      Догоны
+      <span class="nav-count" id="ret-count-m">0</span>
+    </a>
+    <a class="nav-item" data-route href="#/analytics">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3.5"/></svg>
+      Аналитика
+    </a>
+    <a class="nav-item" data-route href="#/loyalty">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3.5h10l4 5.5-9 11.5L3 9z"/><path d="M3 9h18M9.5 9 12 20.2 14.5 9"/></svg>
+      Лояльность
+    </a>
+  </nav>
 
   <div class="sheet-veil" id="sheet-veil"></div>
   <aside class="sheet" id="sheet" aria-label="Карточка клиентки"></aside>

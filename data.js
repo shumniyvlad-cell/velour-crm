@@ -1,6 +1,6 @@
-/* ВЕЛЮР — демо-данные.
+/* ВЕЛЮР — демо-данные (v2: салон при отеле).
    Seeded PRNG → генерация детерминирована, но даты привязаны к «сегодня»,
-   поэтому дашборд, записи и догоны всегда выглядят живыми. */
+   поэтому дашборд, календарь и догоны всегда выглядят живыми. */
 
 (function () {
   'use strict';
@@ -31,16 +31,22 @@
     return `${y}-${m}-${dd}`;
   };
 
-  // --- Мастер ---
-  const MASTER = {
-    name: 'Алина Морозова',
-    studio: 'Студия «Велюр»',
-    role: 'Мастер маникюра и бровей',
-    city: 'Сочи',
+  // --- Салон и мастера ---
+  const SALON = { name: 'Салон «Велюр»', place: 'салон красоты при отеле', city: 'Сочи' };
+  const MASTERS = [
+    { id: 'alina', name: 'Алина Морозова', short: 'Алина', role: 'ногтевой сервис' },
+    { id: 'dina', name: 'Дина Асланова', short: 'Дина', role: 'брови и ресницы' },
+    { id: 'sveta', name: 'Светлана Юрьева', short: 'Светлана', role: 'универсальный мастер' },
+  ];
+  const NAIL_SVC = ['man', 'ped', 'ukr'];
+  // Домашний мастер по услуге; иногда подхватывает универсал
+  const masterFor = (svcId) => {
+    const home = NAIL_SVC.includes(svcId) ? 'alina' : 'dina';
+    return rnd() < 0.75 ? home : 'sveta';
   };
+  const homeMaster = (svcId) => (NAIL_SVC.includes(svcId) ? 'alina' : 'dina');
 
-  // --- Услуги ---
-  // msg — полное название в винительном падеже для личных сообщений («жду вас на …»)
+  // --- Услуги (msg — винительный падеж для личных сообщений: «жду вас на …») ---
   const SERVICES = [
     { id: 'man', name: 'Маникюр + гель-лак', short: 'Маникюр', msg: 'маникюр с покрытием', price: 2800, dur: 120 },
     { id: 'ped', name: 'Педикюр + покрытие', short: 'Педикюр', msg: 'педикюр с покрытием', price: 3400, dur: 90 },
@@ -56,7 +62,7 @@
 
   /* --- Клиентки ---
      cohort: vip | regular | new | sleeping | risk — задаёт форму истории.
-     favs: базовые услуги, interval: средний цикл визитов в днях. */
+     7-й элемент 'tourist' — гостья отеля: живёт не в городе, маркетинговые догоны ей не шлём. */
   const CLIENT_SEEDS = [
     // VIP: давно ходят, часто, стабильно
     ['Анна Соколова',      'vip', ['man', 'bro'], 21, '03-14', 'Кофе с корицей. Аллергия на гель Kodi.'],
@@ -88,10 +94,10 @@
     ['Оксана Павлова',     'new', ['man'], 30, '07-19', 'Пришла по рекомендации Ольги В.'],
     ['Яна Фролова',        'new', ['bro'], 30, '03-08', ''],
     ['Галина Степанова',   'new', ['man'], 28, '11-11', ''],
-    ['Регина Хакимова',    'new', ['res'], 35, '05-30', ''],
-    ['Милана Ковалёва',    'new', ['man'], 26, '09-24', 'Из Instagram-рекламы.'],
+    ['Регина Хакимова',    'new', ['res'], 35, '05-30', 'Гостья отеля — делала ресницы перед вылетом.', 'tourist'],
+    ['Милана Ковалёва',    'new', ['man'], 26, '09-24', 'Гостья отеля, номер 412.', 'tourist'],
     ['Лилия Сафина',       'new', ['man', 'bro'], 30, '01-26', ''],
-    ['Надежда Тихонова',   'new', ['ped'], 32, '06-28', ''],
+    ['Надежда Тихонова',   'new', ['ped'], 32, '06-28', 'Отдыхала с семьёй, улетела домой.', 'tourist'],
     ['Элина Мустафина',    'new', ['man'], 28, '10-06', ''],
     // Спящие: пропали 60+ дней назад
     ['Жанна Александрова', 'sleeping', ['man'], 28, '02-18', ''],
@@ -106,7 +112,7 @@
     ['Нина Ефимова',       'risk', ['man', 'bro'], 28, '05-12', ''],
     ['Зарина Алиева',      'risk', ['ped'], 30, '01-08', ''],
     ['Динара Юсупова',     'risk', ['man'], 24, '10-17', 'Любит нюдовые оттенки.'],
-    ['Есения Лазарева',    'risk', ['res'], 36, '06-09', ''],
+    ['Есения Лазарева',    'risk', ['res'], 36, '06-09', 'Гостья отеля, приезжает раз в сезон.', 'tourist'],
   ];
 
   // Дни рождения в ближайшую неделю — для догона «поздравить»
@@ -116,23 +122,26 @@
   const appointments = [];
   let apptId = 1;
 
-  // Сетка одного мастера: слоты по 2 часа — любая услуга (до 120 мин) помещается в один слот.
-  // занятые слоты будущих дней: 'YYYY-MM-DD HH:MM' → true
+  // Сетка: слоты по 2 часа, отдельная у каждого мастера
   const takenSlots = {};
   const SLOT_TIMES = ['10:00', '12:00', '14:00', '16:00', '18:00'];
+  const slotKey = (masterId, dateIso, t) => `${masterId}|${dateIso} ${t}`;
 
-  function takeSlot(dateIso, preferIdx) {
+  function takeSlot(masterId, dateIso, preferIdx) {
     for (let k = 0; k < SLOT_TIMES.length; k++) {
       const t = SLOT_TIMES[(preferIdx + k) % SLOT_TIMES.length];
-      const key = dateIso + ' ' + t;
-      if (!takenSlots[key]) { takenSlots[key] = true; return t; }
+      if (!takenSlots[slotKey(masterId, dateIso, t)]) {
+        takenSlots[slotKey(masterId, dateIso, t)] = true;
+        return t;
+      }
     }
     return null;
   }
 
   CLIENT_SEEDS.forEach((seed, idx) => {
-    const [name, cohort, favs, interval, bday, note] = seed;
+    const [name, cohort, favs, interval, bday, note, flag] = seed;
     const id = 'c' + (idx + 1);
+    const tourist = flag === 'tourist';
     const phone = `+7 9${ri(10, 89)} ${ri(100, 999)}-${String(ri(0, 99)).padStart(2, '0')}-${String(ri(0, 99)).padStart(2, '0')}`;
     const tg = '@' + name.split(' ')[0].toLowerCase()
       .replace(/ё/g, 'e').replace(/[аа]/g, 'a').replace(/о/g, 'o').replace(/е/g, 'e')
@@ -152,11 +161,11 @@
 
     const client = {
       id, name, phone, tg, birthday: bdayFinal, note: note || '',
-      cohort, favs, interval, joined: iso(day(-joinedDaysAgo)),
+      cohort, favs, interval, tourist, joined: iso(day(-joinedDaysAgo)),
     };
     clients.push(client);
 
-    // --- История визитов: от joined до последнего визита (lastGap дней назад) ---
+    // --- История визитов ---
     let cursor = joinedDaysAgo;
     const visits = [];
     while (cursor > lastGap) {
@@ -166,10 +175,9 @@
     if (!visits.includes(lastGap) && cohort !== 'new') visits.push(lastGap);
     if (cohort === 'new' && visits.length === 0) visits.push(lastGap);
 
-    visits.sort((a, b) => b - a); // от старых (большой offset) к свежим
-    visits.forEach((offset, vi) => {
+    visits.sort((a, b) => b - a);
+    visits.forEach((offset) => {
       const isLast = offset === Math.min(...visits);
-      // исходы: done чаще всего; отмены/неявки — только не в последнем визите
       let status = 'done', reason = null;
       const roll = rnd();
       if (!isLast && roll > 0.90) { status = 'cancelled'; reason = pick(CANCEL_REASONS); }
@@ -180,62 +188,72 @@
       appointments.push({
         id: 'a' + apptId++, clientId: id, serviceIds: svcIds, price,
         date: iso(day(-offset)), time: pick(SLOT_TIMES), status, reason,
+        master: masterFor(favs[0]),
       });
     });
 
-    // --- Будущие записи: одна услуга = один слот, чтобы сетка сходилась физически ---
-    const hasFuture = (cohort === 'vip') || (cohort === 'regular' && rnd() < 0.72) || (cohort === 'new' && rnd() < 0.5);
+    // --- Будущие записи: цепочка по циклу клиентки, горизонт ~3 месяца.
+    //     Одна услуга = один слот. Гостьи отеля улетают — вперёд не записываем.
+    const hasFuture = !tourist && (
+      (cohort === 'vip') || (cohort === 'regular' && rnd() < 0.72) || (cohort === 'new' && rnd() < 0.5)
+    );
     if (hasFuture) {
-      const inDays = cohort === 'vip' ? ri(1, 9) : ri(1, 13);
-      const dIso = iso(day(inDays));
-      const t = takeSlot(dIso, ri(0, SLOT_TIMES.length - 1));
-      if (t) {
-        const svcIds = [favs[0]];
-        const price = svcIds.reduce((s, sid) => s + SVC[sid].price, 0);
-        appointments.push({
-          id: 'a' + apptId++, clientId: id, serviceIds: svcIds, price,
-          date: dIso, time: t,
-          status: inDays <= 2 ? (rnd() < 0.6 ? 'confirmed' : 'pending') : (rnd() < 0.35 ? 'confirmed' : 'pending'),
-          reason: null,
-        });
+      let offset = cohort === 'vip' ? ri(1, 9) : ri(1, 13);
+      const chainLen = cohort === 'new' ? 1 : (cohort === 'vip' ? 4 : ri(2, 3));
+      for (let n = 0; n < chainLen && offset <= 95; n++) {
+        const dIso = iso(day(offset));
+        const svcId = favs[0];
+        const masterId = masterFor(svcId);
+        const t = takeSlot(masterId, dIso, ri(0, SLOT_TIMES.length - 1));
+        if (t) {
+          appointments.push({
+            id: 'a' + apptId++, clientId: id, serviceIds: [svcId],
+            price: SVC[svcId].price, date: dIso, time: t,
+            status: offset <= 2 ? (rnd() < 0.6 ? 'confirmed' : 'pending') : (rnd() < 0.35 ? 'confirmed' : 'pending'),
+            reason: null, master: masterId,
+          });
+        }
+        offset += Math.max(14, Math.round(interval * (0.85 + rnd() * 0.35)));
       }
     }
   });
 
-  // --- Сегодняшний день: живая лента ---
-  // Утро: 2 завершённых визита; день/вечер: подтверждённая и неподтверждённая записи.
+  // --- Сегодня: живая лента у двух мастеров ---
   const todayIso = iso(TODAY);
-  function forceToday(clientIdx, time, status) {
+  function force(clientIdx, dayOffsetN, time, status) {
     const c = clients[clientIdx];
-    const svcIds = [c.favs[0]];
-    const price = svcIds.reduce((s, sid) => s + SVC[sid].price, 0);
-    takenSlots[todayIso + ' ' + time] = true;
+    const svcId = c.favs[0];
+    const masterId = homeMaster(svcId);
+    const dIso = iso(day(dayOffsetN));
+    takenSlots[slotKey(masterId, dIso, time)] = true;
     appointments.push({
-      id: 'a' + apptId++, clientId: c.id, serviceIds: svcIds, price,
-      date: todayIso, time, status, reason: status === 'no_show' ? 'Не пришла без предупреждения' : null,
-    });
-  }
-  forceToday(0, '10:00', 'done');
-  forceToday(9, '12:00', 'done');
-  forceToday(2, '14:00', 'confirmed');
-  forceToday(12, '16:00', 'pending');
-  forceToday(20, '18:00', 'pending');
-
-  // Вчера: завершённые визиты для догона «как впечатления» + одна неявка
-  const yIso = iso(day(-1));
-  function forceYesterday(clientIdx, time, status) {
-    const c = clients[clientIdx];
-    const svcIds = [c.favs[0]];
-    appointments.push({
-      id: 'a' + apptId++, clientId: c.id, serviceIds: svcIds,
-      price: svcIds.reduce((s, sid) => s + SVC[sid].price, 0),
-      date: yIso, time, status,
+      id: 'a' + apptId++, clientId: c.id, serviceIds: [svcId],
+      price: SVC[svcId].price, date: dIso, time, status,
       reason: status === 'no_show' ? 'Не пришла без предупреждения' : null,
+      master: masterId,
     });
   }
-  forceYesterday(6, '12:00', 'done');
-  forceYesterday(15, '16:00', 'done');
-  forceYesterday(39, '18:00', 'no_show');
+  // Сегодня — Алина (ногти)
+  force(0, 0, '10:00', 'done');
+  force(9, 0, '12:00', 'done');
+  force(2, 0, '14:00', 'confirmed');
+  force(12, 0, '16:00', 'pending');
+  force(20, 0, '18:00', 'pending');
+  // Сегодня — Дина (брови/ресницы)
+  force(8, 0, '12:00', 'done');
+  force(16, 0, '16:00', 'confirmed');
+  // Вчера: завершённые визиты для догона «как впечатления» + одна неявка
+  force(6, -1, '12:00', 'done');
+  force(15, -1, '16:00', 'done');
+  force(22, -1, '14:00', 'done');
+  force(39, -1, '18:00', 'no_show');
+  // Завтра: записи, требующие подтверждения
+  [[4, '12:00'], [17, '14:00'], [24, '16:00'], [25, '12:00']].forEach(([ci, time]) => {
+    const c = clients[ci];
+    const tIso = iso(day(1));
+    if (appointments.some((a) => a.clientId === c.id && a.date === tIso)) return;
+    force(ci, 1, time, 'pending');
+  });
 
   // Свежие потери за последние 30 дней — чтобы аналитика потерь была наглядной
   [
@@ -253,25 +271,13 @@
       id: 'a' + apptId++, clientId: c.id, serviceIds: svcIds,
       price: svcIds.reduce((s, sid) => s + SVC[sid].price, 0),
       date: iso(day(-ago)), time: pick(SLOT_TIMES), status, reason,
-    });
-  });
-
-  // Завтра: записи, требующие подтверждения
-  const tIso = iso(day(1));
-  [[4, '12:00'], [17, '14:00'], [24, '16:00']].forEach(([ci, time]) => {
-    const c = clients[ci];
-    if (appointments.some((a) => a.clientId === c.id && a.date === tIso)) return;
-    const svcIds = [c.favs[0]];
-    takenSlots[tIso + ' ' + time] = true;
-    appointments.push({
-      id: 'a' + apptId++, clientId: c.id, serviceIds: svcIds,
-      price: svcIds.reduce((s, sid) => s + SVC[sid].price, 0),
-      date: tIso, time, status: 'pending', reason: null,
+      master: masterFor(c.favs[0]),
     });
   });
 
   window.VELOUR_DATA = {
-    master: MASTER,
+    salon: SALON,
+    masters: MASTERS,
     services: SERVICES,
     cancelReasons: CANCEL_REASONS,
     clients,
