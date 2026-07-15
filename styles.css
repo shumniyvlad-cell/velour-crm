@@ -249,11 +249,12 @@ tr:focus-visible { outline-offset: -2px; }
 .stat .stat-label { font-size: 11.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; padding-right: 40px; }
 .stat .stat-value {
   font-family: var(--font-num);
-  font-size: 29px; font-weight: 560; line-height: 1.12;
-  margin-top: 8px; letter-spacing: -0.03em;
-  font-variant-numeric: tabular-nums;
+  font-size: 29px; font-weight: 650; line-height: 1.08;
+  margin-top: 8px; letter-spacing: -0.045em;
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: 'tnum' 1, 'lnum' 1;
 }
-.stat .stat-value small { font-size: 15px; color: var(--ink-2); font-weight: 500; }
+.stat .stat-value small { font-size: 15px; color: var(--ink-2); font-weight: 600; letter-spacing: -0.02em; }
 .stat .stat-foot { margin-top: 6px; font-size: 12px; color: var(--ink-2); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .stat .spark { margin-top: 10px; }
 .stat .spark svg { display: block; width: 100%; height: 34px; }
@@ -275,9 +276,12 @@ tr:focus-visible { outline-offset: -2px; }
 .dashboard-kpis > *, .dashboard-kpi-rail > * { min-width: 0; }
 .dashboard-kpi-rail .stat { min-height: 218px; overflow: hidden; }
 .dashboard-kpi-rail .stat .stat-value {
-  font-family: var(--font-display);
-  font-size: clamp(34px, 3vw, 45px);
-  font-weight: 520;
+  font-family: var(--font-num);
+  font-size: clamp(34px, 2.7vw, 41px);
+  font-weight: 650;
+  line-height: 1;
+  letter-spacing: -0.055em;
+  font-variant-numeric: tabular-nums lining-nums;
 }
 .dashboard-kpi-rail .stat .spark { position: absolute; left: 20px; right: 20px; bottom: 18px; }
 .revenue-hero {
@@ -300,13 +304,21 @@ tr:focus-visible { outline-offset: -2px; }
 .revenue-hero > * { position: relative; z-index: 2; }
 .revenue-hero .stat-label { color: rgba(255, 249, 252, 0.68); }
 .revenue-hero .stat-value {
-  font-family: var(--font-display);
-  font-size: clamp(48px, 4.4vw, 66px);
-  font-weight: 500;
-  letter-spacing: -0.045em;
+  font-family: var(--font-num);
+  font-size: clamp(48px, 4vw, 60px);
+  font-weight: 650;
+  line-height: 1;
+  letter-spacing: -0.06em;
+  font-variant-numeric: tabular-nums lining-nums;
   margin-top: 12px;
 }
-.revenue-hero .stat-value small { font-family: var(--font-display); font-size: 0.64em; color: rgba(255,255,255,0.9); }
+.revenue-hero .stat-value small {
+  font-family: var(--font-num);
+  font-size: 0.46em;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: rgba(255,255,255,0.9);
+}
 .revenue-hero .stat-foot { color: rgba(255, 249, 252, 0.72); }
 .revenue-hero .stat-ico {
   background: rgba(255,255,255,0.08);
@@ -333,7 +345,7 @@ tr:focus-visible { outline-offset: -2px; }
 .hero-journey .journey-hub { fill: rgba(193,47,98,0.15); stroke: var(--coral); stroke-width: 1.4; filter: drop-shadow(0 0 8px rgba(255,112,133,0.8)); }
 .hero-journey .journey-node { fill: rgba(255,255,255,0.07); stroke: rgba(255,255,255,0.22); }
 .hero-journey .journey-glyph { fill: none; stroke: rgba(255,255,255,0.82); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-.hero-journey text { fill: rgba(255,255,255,0.92); font: 500 24px var(--font-display); }
+.hero-journey text { fill: rgba(255,255,255,0.92); font: 650 20px var(--font-num); }
 
 /* ==================== Чипы, теги, статусы ==================== */
 .chips { display: flex; gap: 7px; flex-wrap: wrap; }
@@ -933,14 +945,14 @@ td.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-
   .route-dashboard .btn-primary { font-size: 12px; padding: 9px 7px 9px 14px; }
   .dashboard-kpis { gap: 10px; margin-bottom: 10px; }
   .revenue-hero { min-height: 254px; padding: 20px; }
-  .revenue-hero .stat-value { font-size: clamp(48px, 15vw, 62px); }
+  .revenue-hero .stat-value { font-size: clamp(46px, 13vw, 56px); }
   .revenue-hero .spark { left: 20px; right: 36%; bottom: 17px; }
   .revenue-hero .spark svg { height: 62px; }
   .hero-journey { width: 47%; right: 8px; top: 68px; }
   .dashboard-kpi-rail { gap: 8px; }
   .dashboard-kpi-rail .stat { min-height: 210px; padding: 14px 12px; }
   .dashboard-kpi-rail .stat .stat-label { font-size: 9.5px; line-height: 1.25; padding-right: 25px; }
-  .dashboard-kpi-rail .stat .stat-value { font-size: clamp(27px, 4.8vw, 38px); margin-top: 12px; white-space: nowrap; }
+  .dashboard-kpi-rail .stat .stat-value { font-size: clamp(23px, 6vw, 34px); margin-top: 12px; white-space: nowrap; }
   .dashboard-kpi-rail .stat .stat-value small { font-size: 12px; }
   .dashboard-kpi-rail .stat .stat-foot { font-size: 9.8px; line-height: 1.35; }
   .dashboard-kpi-rail .stat .stat-ico { width: 24px; height: 24px; top: 10px; right: 10px; }
